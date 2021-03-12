@@ -16,7 +16,8 @@ const app = express();
 const path = dirname(fileURLToPath(import.meta.url));
 
 app.use(express.static(join(path, '../public')));
-
+app.use(express.urlencoded({ extended: true }));
+app.set('view engine', 'html');
 // TODO setja upp proxy þjónustu
 // TODO birta index.html skjal
 
@@ -29,8 +30,8 @@ app.use(express.static(join(path, '../public')));
  */
 // eslint-disable-next-line no-unused-vars
 function notFoundHandler(req, res, next) {
-  const title = 'Síða fannst ekki';
-  res.status(404).render('error', { title });
+  res.status(404).send('Síða fannst ekki');
+  next();
 }
 
 /**
@@ -44,14 +45,21 @@ function notFoundHandler(req, res, next) {
 // eslint-disable-next-line no-unused-vars
 function errorHandler(err, req, res, next) {
   console.error(err);
-  const title = 'Villa kom upp';
-  res.status(500).render('error', { title });
+  res.status(500).send('Villa kom upp');
+  next();
 }
+const index = (req, res) => {
+  const indexUrl = join(path, '../index.html');
+  res.sendFile(indexUrl);
+};
+app.get('/', index);
 
+
+
+app.use('/api', proxyRouter);
+// Verðum að setja bara *port* svo virki á heroku
 app.use(notFoundHandler);
 app.use(errorHandler);
-
-// Verðum að setja bara *port* svo virki á heroku
 app.listen(port, () => {
   console.info(`Server running at http://localhost:${port}/`);
 });
